@@ -4,12 +4,15 @@ import { Send, Hash, MessageSquare, Menu, X, User, LogIn, Sparkles, Paperclip, F
 import { motion, AnimatePresence } from 'framer-motion';
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-const socket = io(API_URL, {
-  transports: ['websocket', 'polling'],
-  withCredentials: false
-});
 
 function App() {
+  // Reactive Socket Initialization
+  const socket = useMemo(() => io(API_URL, {
+    transports: ['websocket', 'polling'],
+    withCredentials: false,
+    reconnectionAttempts: 10
+  }), []);
+
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [room, setRoom] = useState('');
   const [username, setUsername] = useState('');
@@ -28,6 +31,7 @@ function App() {
   
   // Robustness States
   const [isConnected, setIsConnected] = useState(socket.connected);
+  const [errorMsg, setErrorMsg] = useState('');
   const [showReconnected, setShowReconnected] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -43,6 +47,7 @@ function App() {
     // Connection monitoring
     const onConnect = () => {
       setIsConnected(true);
+      setErrorMsg('');
       setShowReconnected(true);
       setTimeout(() => setShowReconnected(false), 3000);
     };
@@ -54,11 +59,12 @@ function App() {
     // Detail error logging
     socket.on('connect_error', (err) => {
       console.error(`🔴 [Socket] Connection Error: ${err.message}`);
-      console.log(`Debug Info: API_URL is ${API_URL}`);
+      setErrorMsg(err.message);
     });
 
     socket.on('error', (err) => {
       console.error('🔴 [Socket] Generic Error:', err);
+      setErrorMsg('Internal Error');
     });
 
     // Join room
@@ -349,6 +355,11 @@ function App() {
             <div>
               <X size={14} /> Connection Lost. Reconnecting...
             </div>
+            {errorMsg && (
+              <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#ffeb3b', marginTop: '2px' }}>
+                Error: {errorMsg}
+              </div>
+            )}
             <div style={{ fontSize: '10px', opacity: 0.8, marginTop: '4px' }}>
               Target: {API_URL}
             </div>

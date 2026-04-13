@@ -35,24 +35,25 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
 
-const allowedOrigin = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.replace(/\/$/, "") : "*";
-
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigin,
+    origin: (origin, callback) => {
+      // Dynamic origin reflection: Always allow the requesting origin
+      callback(null, true); 
+    },
     methods: ['GET', 'POST'],
     credentials: false
   },
   transports: ['websocket', 'polling'],
 });
 
-app.use(cors({
-  origin: allowedOrigin,
-  credentials: false
-}));
+app.use(cors()); // Allow all for Express routes
 app.use(express.json());
+
+// Health Check
+app.get('/', (req, res) => res.send('Nexus Chat API is Online'));
 
 // File Upload Route
 app.post('/api/upload', upload.single('file'), (req, res) => {
