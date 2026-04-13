@@ -51,6 +51,16 @@ function App() {
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
 
+    // Detail error logging
+    socket.on('connect_error', (err) => {
+      console.error(`🔴 [Socket] Connection Error: ${err.message}`);
+      console.log(`Debug Info: API_URL is ${API_URL}`);
+    });
+
+    socket.on('error', (err) => {
+      console.error('🔴 [Socket] Generic Error:', err);
+    });
+
     // Join room
     setIsLoadingHistory(true);
     socket.emit('join_room', room);
