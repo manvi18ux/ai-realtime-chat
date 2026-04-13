@@ -42,6 +42,7 @@ const io = new Server(server, {
     origin: process.env.FRONTEND_URL || '*', // Secure origin for deployment
     methods: ['GET', 'POST'],
   },
+  transports: ['websocket'],
 });
 
 app.use(cors({

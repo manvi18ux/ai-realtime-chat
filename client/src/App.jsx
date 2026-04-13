@@ -4,7 +4,10 @@ import { Send, Hash, MessageSquare, Menu, X, User, LogIn, Sparkles, Paperclip, F
 import { motion, AnimatePresence } from 'framer-motion';
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-const socket = io(API_URL);
+const socket = io(API_URL, {
+  transports: ['websocket'],
+  upgrade: false
+});
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
