@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import io from 'socket.io-client';
 import { Send, Hash, MessageSquare, Menu, X, User, LogIn, Sparkles, Paperclip, File, Image as ImageIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
