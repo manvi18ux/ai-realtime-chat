@@ -346,7 +346,12 @@ function App() {
       <div className="chat-window">
         {!isConnected && (
           <div className="connection-banner banner-offline">
-            <X size={14} /> Connection Lost. Reconnecting...
+            <div>
+              <X size={14} /> Connection Lost. Reconnecting...
+            </div>
+            <div style={{ fontSize: '10px', opacity: 0.8, marginTop: '4px' }}>
+              Target: {API_URL}
+            </div>
           </div>
         )}
         {showReconnected && (
