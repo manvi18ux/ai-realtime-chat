@@ -50,7 +50,7 @@ graph TD
 
 ### 🧠 AI-Powered Intelligence
 - **One-Click Summarization**: Condense long discussions into actionable bullet points. Features a custom parsing engine to handle AI's markdown outputs within a beautiful glassmorphic modal.
-- **Real-Time File Sharing**: Support for high-speed image and PDF uploads (up to 10MB) powered by AWS S3. Features real-time previews for images and dedicated document icons for PDFs.
+- **Real-Time File Sharing**: Support for high-speed image and PDF uploads (up to 10MB) powered by Cloudinary. Features real-time previews for images and dedicated document icons for PDFs.
 - **Latency Monitoring**: Built-in QA tools track AI inference time, highlighting performance bottlenecks in real-time.
 
 ### ⚡ Professional Real-Time UX
@@ -72,6 +72,7 @@ graph TD
 | **Frontend** | React 19, Vite, Framer Motion, Lucide Icons, Socket.io-client |
 | **Backend** | Node.js, Express, Socket.io, Mongoose |
 | **AI** | Google Generative AI (Gemini 2.0 Flash-Lite) |
+| **Storage** | Cloudinary (Free Forever Tier) |
 | **Database** | MongoDB |
 | **DevOps** | Docker, Docker Compose, Nginx |
 
@@ -124,6 +125,10 @@ AWS_ACCESS_KEY_ID=your_key
 AWS_SECRET_ACCESS_KEY=your_secret
 AWS_REGION=your_region
 AWS_S3_BUCKET_NAME=your_bucket
+# Cloudinary (Preferred for Free Forever tier)
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_key
+CLOUDINARY_API_SECRET=your_secret
 ```
 Create a `.env` file in `/client`:
 ```env

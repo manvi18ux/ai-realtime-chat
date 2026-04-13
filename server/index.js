@@ -6,36 +6,33 @@ const cors = require('cors');
 require('dotenv').config();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const multer = require('multer');
-const multerS3 = require('multer-s3');
-const { S3Client } = require('@aws-sdk/client-s3');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const Message = require('./models/Message');
 
 // Gemini Setup
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
 
-// AWS S3 Setup
-const s3 = new S3Client({
-  region: process.env.AWS_REGION || 'us-east-1',
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+// Cloudinary Setup
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'nexus_chat_uploads',
+    allowed_formats: ['jpg', 'png', 'jpeg', 'pdf'],
+    resource_type: 'auto', // Allows non-image files like PDFs
   },
 });
 
-const upload = multer({
-  storage: multerS3({
-    s3: s3,
-    bucket: process.env.AWS_S3_BUCKET_NAME,
-    contentType: multerS3.AUTO_CONTENT_TYPE,
-    metadata: function (req, file, cb) {
-      cb(null, { fieldName: file.fieldname });
-    },
-    key: function (req, file, cb) {
-      cb(null, `uploads/${Date.now()}-${file.originalname}`);
-    },
-  }),
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
 
 const app = express();
@@ -58,14 +55,16 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
     return res.status(400).json({ error: "No file uploaded" });
   }
 
-  // Determine file type category
+  // Determine file type category from Cloudinary metadata
   let fileType = 'other';
-  const mime = req.file.contentType || '';
-  if (mime.startsWith('image/')) fileType = 'image';
-  else if (mime === 'application/pdf') fileType = 'pdf';
+  const format = req.file.format || '';
+  const isImage = ['jpg', 'png', 'jpeg', 'webp'].some(f => format.toLowerCase().includes(f));
+  
+  if (isImage) fileType = 'image';
+  else if (format.toLowerCase() === 'pdf') fileType = 'pdf';
 
   res.json({
-    fileUrl: req.file.location,
+    fileUrl: req.file.path, // Cloudinary secure URL
     fileType: fileType,
     fileName: req.file.originalname
   });

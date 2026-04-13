@@ -13,14 +13,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1029.0",
     "@google/generative-ai": "^0.24.1",
+    "cloudinary": "^1.41.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.1",
     "express": "^5.2.1",
     "mongoose": "^9.4.1",
     "multer": "^2.1.1",
-    "multer-s3": "^3.0.1",
+    "multer-storage-cloudinary": "^4.0.0",
     "socket.io": "^4.8.3"
   },
   "devDependencies": {
