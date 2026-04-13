@@ -29,6 +29,7 @@ graph TD
     subgraph "Data & AI Layer"
         DB[(MongoDB Cluster)]
         Gemini[Google Gemini 2.0 Flash-Lite]
+        Cloud[Cloudinary CDN]
     end
 
     %% Connections
@@ -39,8 +40,10 @@ graph TD
     SocketS <--> Mongoose
     Mongoose <--> DB
     LLM_Service <--> Gemini
+    SocketS <--> Cloud
     
     style Gemini fill:#f9f,stroke:#333,stroke-width:2px
+    style Cloud fill:#3b82f6,stroke:#333,stroke-width:2px
     style DB fill:#bbf,stroke:#333,stroke-width:2px
 ```
 
@@ -121,18 +124,16 @@ Create a `.env` file in `/server`:
 GEMINI_API_KEY=your_api_key_here
 MONGO_URI=mongodb://localhost:27017/chat_app
 PORT=5000
-AWS_ACCESS_KEY_ID=your_key
-AWS_SECRET_ACCESS_KEY=your_secret
-AWS_REGION=your_region
-AWS_S3_BUCKET_NAME=your_bucket
-# Cloudinary (Preferred for Free Forever tier)
+FRONTEND_URL=https://your-app.vercel.app
+
+# Cloudinary (Free Forever)
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_key
 CLOUDINARY_API_SECRET=your_secret
 ```
 Create a `.env` file in `/client`:
 ```env
-VITE_API_URL=http://localhost:5000
+VITE_BACKEND_URL=http://localhost:5000
 ```
 
 ### 3. Run Development
