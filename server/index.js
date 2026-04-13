@@ -41,15 +41,16 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: '*', 
+    origin: allowedOrigin,
     methods: ['GET', 'POST'],
-    credentials: true
+    credentials: false
   },
-  transports: ['websocket', 'polling'], // Allow polling as fallback
+  transports: ['websocket', 'polling'],
 });
 
 app.use(cors({
-  origin: '*',
+  origin: allowedOrigin,
+  credentials: false
 }));
 app.use(express.json());
 

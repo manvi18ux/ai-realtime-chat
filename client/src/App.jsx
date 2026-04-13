@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 const socket = io(API_URL, {
   transports: ['websocket', 'polling'],
-  withCredentials: true
+  withCredentials: false
 });
 
 function App() {
