@@ -61,21 +61,18 @@ const upload = multer({
 const app = express();
 const server = http.createServer(app);
 const ALLOWED_ORIGINS = [
-  'https://ai-realtime-chat-manvi-sinhas-projects.vercel.app',
-  'https://ai-realtime-chat-git-main-manvi-sinhas-projects.vercel.app',
+  'https://ai-realtime-chat-8wr4.vercel.app', // Added your current Vercel URL
   'http://localhost:5173',
-  'http://localhost:3000'
-];
+  'http://localhost:3000',
+  process.env.CLIENT_URL // Allow setting via environment variable
+].filter(Boolean); // Remote null/undefined entries
 
 const io = new Server(server, {
   cors: {
-    origin: (origin, callback) => {
-      // Allow if origin is in the list or is a Vercel project subdomain
-      if (!origin || ALLOWED_ORIGINS.includes(origin) || origin.includes('manvi-sinhas-projects.vercel.app')) {
         callback(null, true);
       } else {
         console.warn(`[CORS] Rejected origin: ${origin}`);
-        callback(new Error('Not allowed by CORS'));
+        callback(null, false); // Don't throw error, just reject
       }
     },
     methods: ['GET', 'POST'],
@@ -87,10 +84,10 @@ const io = new Server(server, {
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || ALLOWED_ORIGINS.includes(origin) || origin.includes('manvi-sinhas-projects.vercel.app')) {
+    if (!origin || ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.vercel.app')) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(null, false);
     }
   },
   credentials: true
