@@ -199,8 +199,8 @@ app.post('/api/summarize', async (req, res) => {
 
     res.json({ summary });
   } catch (err) {
-    console.error('❌ Summarization error (Likely DB offline):', err.message);
-    res.json({ summary: "AI Summarization is currently unavailable (Database Offline)." });
+    console.error('❌ Summarization error:', err.message);
+    res.json({ summary: "AI Summarization is currently unavailable (Rate-limited or Database error)." });
   }
 });
 
@@ -243,7 +243,7 @@ app.post('/api/suggest-replies', async (req, res) => {
 
     res.json({ suggestions: Array.isArray(suggestions) ? suggestions.slice(0, 3) : [] });
   } catch (err) {
-    console.error('❌ Suggestion error (Likely DB offline):', err.message);
+    console.error('❌ Suggestion error:', err.message);
     res.json({ suggestions: [] });
   }
 });

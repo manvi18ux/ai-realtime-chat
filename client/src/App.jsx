@@ -102,10 +102,18 @@ function App() {
     });
 
     // Listen for new messages
+    let lastSuggestionTime = 0;
     socket.on('receive_message', (data) => {
       console.log(`📩 [UI] New message in ${room}:`, data.content);
       setMessageList((list) => [...list, data]);
-      if (data.sender !== username) fetchSuggestions();
+      
+      // Only fetch suggestions if someone else speaks AND we haven't asked in the last 15 seconds
+      // This protects your Gemini Free Tier quota.
+      const now = Date.now();
+      if (data.sender !== username && (now - lastSuggestionTime > 15000)) {
+        lastSuggestionTime = now;
+        fetchSuggestions();
+      }
     });
 
     // Listen for typing events
