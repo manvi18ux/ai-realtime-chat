@@ -38,12 +38,15 @@ body {
 /* Sidebar Styling */
 .sidebar {
   width: 320px;
+  min-width: 320px; /* Prevent collapse */
+  flex-shrink: 0;
   background: var(--glass);
   backdrop-filter: blur(12px);
   border-right: 1px solid var(--glass-border);
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, width 0.3s ease;
+  z-index: 20;
 }
 
 .sidebar-header {
@@ -75,9 +78,11 @@ body {
 /* Chat window styling */
 .chat-window {
   flex: 1;
+  min-width: 0; /* Important for flexbox overflow */
   display: flex;
   flex-direction: column;
   position: relative;
+  background: rgba(15, 23, 42, 0.3);
 }
 
 .chat-header {
@@ -213,27 +218,28 @@ input:focus {
     padding: 16px;
   }
 
-  /* Overlay */
-  .overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    z-index: 40;
-    animation: fadeIn 0.2s ease-out;
-  }
-
   .mobile-only {
     display: block !important;
   }
+}
 
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
+/* Global Overlay (Moved outside media query for consistency) */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 40;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 }
 
 /* Modal Styling */

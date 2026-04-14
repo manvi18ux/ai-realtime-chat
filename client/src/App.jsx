@@ -42,6 +42,19 @@ function App() {
   
   const scrollRef = useRef();
   const rooms = ['General', 'Tech', 'Design', 'Random'];
+  const [isLoggedOut, setIsLoggedOut] = useState(false); // Helper for session clearing
+
+  // Safety helper for timestamp formatting
+  const formatTime = (timestamp) => {
+    try {
+      if (!timestamp) return '--:--';
+      const date = new Date(timestamp);
+      if (isNaN(date.getTime())) return '--:--';
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      return '--:--';
+    }
+  };
 
   // 1. Connection Monitoring (Runs on Mount)
   useEffect(() => {
@@ -477,9 +490,9 @@ function App() {
             </>
           ) : (
             <AnimatePresence initial={false}>
-              {messageList.map((msg, index) => (
+              {(Array.isArray(messageList) ? messageList : []).map((msg, index) => (
                 <motion.div 
-                  key={index} 
+                  key={msg._id || index} 
                   initial={{ opacity: 0, y: 20, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ duration: 0.2 }}
@@ -522,7 +535,7 @@ function App() {
                   {msg.content && <div>{msg.content}</div>}
                   
                   <div className="message-info">
-                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {formatTime(msg.timestamp)}
                   </div>
                 </motion.div>
               ))}
