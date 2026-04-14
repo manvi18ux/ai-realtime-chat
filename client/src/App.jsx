@@ -492,19 +492,27 @@ function App() {
                   {msg.fileUrl && (
                     <div className="file-attachment">
                       {msg.fileType === 'image' ? (
-                        <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer">
+                        <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer" className="image-link">
                           <img src={msg.fileUrl} alt="attachment" className="chat-image" />
                         </a>
                       ) : (
-                        <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer" className="file-link">
+                        <a 
+                          href={msg.fileUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="file-link"
+                          title="Open Document"
+                        >
                           <div className="file-icon-box">
                             {msg.fileType === 'pdf' ? <File size={24} color="#f43f5e" /> : <Paperclip size={24} />}
                           </div>
                           <div className="file-name-info">
-                            <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>
-                              {msg.fileType === 'pdf' ? 'PDF Document' : 'Attachment'}
+                            <span className="file-name-text">
+                              {msg.fileName || (msg.fileType === 'pdf' ? 'PDF Document' : 'Attachment')}
                             </span>
-                            <span style={{ fontSize: '0.7rem', opacity: 0.7 }}>Click to view</span>
+                            <span className="file-meta-text">
+                              {(msg.fileUrl.split('.').pop() || 'file').toUpperCase()} • Click to view
+                            </span>
                           </div>
                         </a>
                       )}

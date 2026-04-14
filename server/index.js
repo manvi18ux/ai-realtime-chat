@@ -32,10 +32,19 @@ cloudinary.config(cloudinaryConfig);
 
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: {
-    folder: 'nexus_chat_uploads',
-    allowed_formats: ['jpg', 'png', 'jpeg', 'pdf'],
-    resource_type: 'auto', // Allows non-image files like PDFs
+  params: async (req, file) => {
+    // Determine format
+    const extension = file.originalname.split('.').pop().toLowerCase();
+    const isPdf = extension === 'pdf';
+    
+    return {
+      folder: 'nexus_chat_uploads',
+      format: isPdf ? 'pdf' : undefined, // Explicitly set pdf format if needed
+      resource_type: 'auto',
+      type: 'upload', // Crucial for public access
+      access_mode: 'public', // Ensures the file isn't private
+      public_id: `${Date.now()}-${file.originalname.replace(/\.[^/.]+$/, "")}`
+    };
   },
 });
 
@@ -100,18 +109,24 @@ app.post('/api/upload', (req, res) => {
     }
 
     try {
-      // Determine file type category from Cloudinary metadata
+      // Improved file type detection
       let fileType = 'other';
-      const format = req.file.format || '';
-      const isImage = ['jpg', 'png', 'jpeg', 'webp'].some(f => format.toLowerCase().includes(f));
+      const mimetype = req.file.mimetype || '';
+      const originalName = req.file.originalname || '';
       
-      if (isImage) fileType = 'image';
-      else if (format.toLowerCase() === 'pdf') fileType = 'pdf';
+      const isImage = mimetype.startsWith('image/') || 
+                      ['jpg', 'jpeg', 'png', 'webp'].some(ext => originalName.toLowerCase().endsWith(ext));
+      const isPdf = mimetype === 'application/pdf' || originalName.toLowerCase().endsWith('.pdf');
 
-      console.log(`✅ [Upload] Success: ${req.file.originalname} -> ${req.file.path}`);
+      if (isImage) fileType = 'image';
+      else if (isPdf) fileType = 'pdf';
+
+      console.log(`✅ [Upload] Success: ${req.file.originalname}`);
+      console.log(`   └─ Type: ${fileType} | MIME: ${mimetype}`);
+      console.log(`   └─ Path: ${req.file.path}`);
 
       res.json({
-        fileUrl: req.file.path, // Cloudinary secure URL
+        fileUrl: req.file.path, 
         fileType: fileType,
         fileName: req.file.originalname
       });
