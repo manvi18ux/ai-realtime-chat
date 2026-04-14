@@ -10,10 +10,10 @@ const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const Message = require('./models/Message');
 
-// Gemini Setup
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-// Use gemini-1.5-flash for standard free-tier accounts
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+// AI Config (Multi-Model Support)
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'fake_key');
+const geminiModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 // Cloudinary Setup
 const cloudinaryConfig = {
@@ -142,17 +142,48 @@ app.post('/api/upload', (req, res) => {
   });
 });
 
-// Helper for Gemini Retries
+// Unified AI Provider Wrapper (Groq First, Gemini Fallback)
 async function generateWithRetry(prompt, retries = 3) {
+  // 1. Try Groq (Llama 3 8B) if key exists
+  if (GROQ_API_KEY && GROQ_API_KEY !== 'your_groq_key_here') {
+    try {
+      console.log('🤖 [AI] Using Groq (Llama 3 8B)...');
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${GROQ_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'llama3-8b-8192',
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.7,
+          max_tokens: 1024
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.choices[0].message.content;
+      } else {
+        const errorData = await response.json();
+        console.warn('⚠️ Groq API failed, checking fallback...', errorData.error?.message);
+      }
+    } catch (err) {
+      console.warn('⚠️ Groq fetch error, checking fallback...', err.message);
+    }
+  }
+
+  // 2. Fallback to Gemini with Retry Logic
+  console.log('🤖 [AI] Using Gemini Fallback...');
   for (let i = 0; i < retries; i++) {
     try {
-      const result = await model.generateContent(prompt);
+      const result = await geminiModel.generateContent(prompt);
       return result.response.text();
     } catch (err) {
-      // 429 = Rate Limit, 503 = Overloaded
       if ((err.status === 503 || err.status === 429) && i < retries - 1) {
         const delay = 2000 * (i + 1);
-        console.warn(`⚠️ Gemini busy/rate-limited (${err.status}), retrying in ${delay}ms... (${i + 1}/${retries})`);
+        console.warn(`⚠️ Gemini busy (${err.status}), retrying in ${delay}ms... (${i + 1}/${retries})`);
         await new Promise(r => setTimeout(r, delay));
         continue;
       }
