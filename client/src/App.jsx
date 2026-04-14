@@ -8,9 +8,10 @@ const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 function App() {
   // Reactive Socket Initialization
   const socket = useMemo(() => io(API_URL, {
-    transports: ['websocket', 'polling'],
-    withCredentials: false,
-    reconnectionAttempts: 10
+    transports: ['polling', 'websocket'], // Start with polling for faster handshake
+    withCredentials: true,
+    reconnectionAttempts: 15,
+    reconnectionDelay: 2000
   }), []);
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -355,13 +356,16 @@ function App() {
             <div>
               <X size={14} /> Connection Lost. Reconnecting...
             </div>
+            <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.9 }}>
+              Note: If the server was idle, it may take 30-60s to wake up.
+            </div>
             {errorMsg && (
               <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#ffeb3b', marginTop: '2px' }}>
-                Error: {errorMsg}
+                Status: {errorMsg}
               </div>
             )}
             <div style={{ fontSize: '10px', opacity: 0.8, marginTop: '4px' }}>
-              Target: {API_URL}
+              Backend: {API_URL}
             </div>
           </div>
         )}

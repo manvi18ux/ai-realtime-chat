@@ -37,19 +37,26 @@ const upload = multer({
 
 const app = express();
 const server = http.createServer(app);
+const ALLOWED_ORIGINS = [
+  'https://ai-realtime-chat-manvi-sinhas-projects.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
+
 const io = new Server(server, {
   cors: {
-    origin: (origin, callback) => {
-      // Dynamic origin reflection: Always allow the requesting origin
-      callback(null, true); 
-    },
+    origin: ALLOWED_ORIGINS,
     methods: ['GET', 'POST'],
-    credentials: false
+    credentials: true
   },
-  transports: ['websocket', 'polling'],
+  transports: ['polling', 'websocket'], // Polling first for better stability on Render/Vercel
+  allowEIO3: true // Compatibility for older clients if any
 });
 
-app.use(cors()); // Allow all for Express routes
+app.use(cors({
+  origin: ALLOWED_ORIGINS,
+  credentials: true
+})); // Explicit CORS for Express routes
 app.use(express.json());
 
 // Health Check
