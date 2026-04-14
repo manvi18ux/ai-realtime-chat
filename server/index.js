@@ -142,11 +142,25 @@ async function generateWithRetry(prompt, retries = 3) {
 }
 
 // MongoDB Connection
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/chat_app';
-mongoose
-  .connect(MONGO_URI)
-  .then(() => console.log('✅ Connected to MongoDB'))
-  .catch((err) => console.error('❌ MongoDB connection error:', err));
+const MONGO_URI = process.env.MONGO_URI;
+
+if (!MONGO_URI) {
+  console.error('❌ [Database] CRITICAL: MONGO_URI is not defined in environment variables!');
+} else {
+  console.log('⏳ [Database] Attempting to connect to MongoDB...');
+  mongoose
+    .connect(MONGO_URI, {
+      serverSelectionTimeoutMS: 5000, // Fail fast if can't connect (5 seconds)
+      socketTimeoutMS: 45000,
+    })
+    .then(() => console.log('✅ [Database] Successfully connected to MongoDB'))
+    .catch((err) => {
+      console.error('❌ [Database] Connection error:', err.message);
+      if (err.message.includes('whitelist')) {
+        console.error('👉 Tip: Check your MongoDB Atlas Network Access whitelist (allow 0.0.0.0/0)');
+      }
+    });
+}
 
 // Summarization Route
 app.post('/api/summarize', async (req, res) => {
