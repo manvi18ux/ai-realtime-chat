@@ -144,14 +144,20 @@ async function generateWithRetry(prompt, retries = 3) {
 // MongoDB Connection
 const MONGO_URI = process.env.MONGO_URI;
 
+// Heartbeat Logger (Helps identify current deployment)
+setInterval(() => {
+  console.log(`[HEARTBEAT] V3_ACTIVE | Time: ${new Date().toLocaleTimeString()}`);
+}, 30000);
+
 if (!MONGO_URI) {
   console.error('❌ [Database] CRITICAL: MONGO_URI is not defined in environment variables!');
 } else {
   console.log(`⏳ [Database] Attempting to connect with URI prefix: ${MONGO_URI.substring(0, 15)}...`);
   mongoose
     .connect(MONGO_URI, {
-      serverSelectionTimeoutMS: 5000, // Fail fast if can't connect (5 seconds)
+      serverSelectionTimeoutMS: 5000, 
       socketTimeoutMS: 45000,
+      bufferCommands: false, // CRITICAL: Stop the "buffering timed out" hang
     })
     .then(() => console.log('✅ [Database] Successfully connected to MongoDB'))
     .catch((err) => {
@@ -267,23 +273,28 @@ io.on('connection', (socket) => {
   // Handle sending messages
   socket.on('send_message', async (data) => {
     const { roomId, sender, content, fileUrl, fileType } = data;
+    
+    // 1. Prepare the message object
+    const newMessage = {
+      roomId,
+      sender,
+      content,
+      fileUrl,
+      fileType,
+      timestamp: new Date()
+    };
 
+    // 2. Broadcast to room INSTANTLY (Real-time fallback)
+    // This allows chat to work even if MongoDB is currently buffering/offline.
+    io.to(roomId).emit('receive_message', newMessage);
+
+    // 3. Try to save to Database in the background
     try {
-      // Create and save message to DB
-      const newMessage = new Message({
-        roomId,
-        sender,
-        content,
-        fileUrl,
-        fileType,
-      });
-      await newMessage.save();
-
-      // Broadcast message to room
-      io.to(roomId).emit('receive_message', newMessage);
-      console.log(`📩 Message sent in room ${roomId} by ${sender}${fileUrl ? ' (with attachment)' : ''}`);
+      const messageToSave = new Message(newMessage);
+      await messageToSave.save();
+      console.log(`💾 [Database] Message saved for room ${roomId}`);
     } catch (err) {
-      console.error('❌ Error saving message:', err);
+      console.error('❌ [Database] Failed to save message history:', err.message);
     }
   });
 
