@@ -39,11 +39,14 @@ const storage = new CloudinaryStorage({
     
     return {
       folder: 'nexus_chat_uploads',
-      format: isPdf ? 'pdf' : undefined,
-      resource_type: isPdf ? 'raw' : 'auto', // Force 'raw' for PDFs to avoid security blocks
+      resource_type: isPdf ? 'raw' : 'auto',
       type: 'upload', 
       access_mode: 'public', 
-      public_id: `${Date.now()}-${file.originalname.replace(/\.[^/.]+$/, "")}`
+      // For raw files, the extension must be in the public_id for proper MIME detection
+      public_id: isPdf 
+        ? `${Date.now()}-${file.originalname}` 
+        : `${Date.now()}-${file.originalname.replace(/\.[^/.]+$/, "")}`,
+      flags: isPdf ? 'attachment' : undefined // Suggest attachment headers for PDFs
     };
   },
 });

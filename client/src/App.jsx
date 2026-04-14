@@ -513,6 +513,7 @@ function App() {
                           href={msg.fileUrl ? msg.fileUrl.replace(/^http:/, 'https:') : '#'} 
                           target="_blank" 
                           rel="noopener noreferrer" 
+                          referrerPolicy="no-referrer"
                           className="file-link"
                           title="Open Document"
                           download={msg.fileName || true}
