@@ -82,18 +82,28 @@ function App() {
   useEffect(() => {
     if (!isLoggedIn) return;
 
+    // Clear any existing listeners to prevent duplicates
+    socket.off('room_history');
+    socket.off('receive_message');
+    socket.off('user_typing');
+    socket.off('user_stop_typing');
+
+    console.log(`🏠 [UI] Joining Room: ${room} as ${username}`);
+
     // Join room
     setIsLoadingHistory(true);
     socket.emit('join_room', room);
     
     // Listen for history
     socket.on('room_history', (history) => {
+      console.log(`📜 [UI] Received history for ${room}:`, history.length, "messages");
       setMessageList(history);
       setIsLoadingHistory(false);
     });
 
     // Listen for new messages
     socket.on('receive_message', (data) => {
+      console.log(`📩 [UI] New message in ${room}:`, data.content);
       setMessageList((list) => [...list, data]);
       if (data.sender !== username) fetchSuggestions();
     });
@@ -114,12 +124,13 @@ function App() {
     });
 
     return () => {
+      console.log(`🧹 [UI] Cleaning up listeners for room: ${room}`);
       socket.off('room_history');
       socket.off('receive_message');
       socket.off('user_typing');
       socket.off('user_stop_typing');
     };
-  }, [room, isLoggedIn]);
+  }, [room, isLoggedIn, username]);
 
   useEffect(() => {
     if (scrollRef.current) {

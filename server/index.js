@@ -15,11 +15,20 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
 
 // Cloudinary Setup
-cloudinary.config({
+const cloudinaryConfig = {
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+};
+
+// Log status on startup (hiding sensitive bits)
+if (!cloudinaryConfig.cloud_name || !cloudinaryConfig.api_key) {
+  console.warn("⚠️ [Cloudinary] Warning: Missing Cloudinary credentials. Uploads will fail.");
+} else {
+  console.log("✅ [Cloudinary] Credentials loaded");
+}
+
+cloudinary.config(cloudinaryConfig);
 
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
@@ -78,23 +87,38 @@ app.use(express.json());
 app.get('/', (req, res) => res.send('Nexus Chat API is Online'));
 
 // File Upload Route
-app.post('/api/upload', upload.single('file'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: "No file uploaded" });
-  }
+app.post('/api/upload', (req, res) => {
+  upload.single('file')(req, res, (err) => {
+    if (err) {
+      console.error("❌ [Upload] Multer Error:", err.message);
+      return res.status(500).json({ error: "File upload failed", details: err.message });
+    }
 
-  // Determine file type category from Cloudinary metadata
-  let fileType = 'other';
-  const format = req.file.format || '';
-  const isImage = ['jpg', 'png', 'jpeg', 'webp'].some(f => format.toLowerCase().includes(f));
-  
-  if (isImage) fileType = 'image';
-  else if (format.toLowerCase() === 'pdf') fileType = 'pdf';
+    if (!req.file) {
+      console.warn("⚠️ [Upload] No file provided in request");
+      return res.status(400).json({ error: "No file uploaded" });
+    }
 
-  res.json({
-    fileUrl: req.file.path, // Cloudinary secure URL
-    fileType: fileType,
-    fileName: req.file.originalname
+    try {
+      // Determine file type category from Cloudinary metadata
+      let fileType = 'other';
+      const format = req.file.format || '';
+      const isImage = ['jpg', 'png', 'jpeg', 'webp'].some(f => format.toLowerCase().includes(f));
+      
+      if (isImage) fileType = 'image';
+      else if (format.toLowerCase() === 'pdf') fileType = 'pdf';
+
+      console.log(`✅ [Upload] Success: ${req.file.originalname} -> ${req.file.path}`);
+
+      res.json({
+        fileUrl: req.file.path, // Cloudinary secure URL
+        fileType: fileType,
+        fileName: req.file.originalname
+      });
+    } catch (processErr) {
+      console.error("❌ [Upload] Processing Error:", processErr);
+      res.status(500).json({ error: "Failed to process upload metadata" });
+    }
   });
 });
 
