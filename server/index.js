@@ -46,7 +46,8 @@ const storage = new CloudinaryStorage({
       public_id: isPdf 
         ? `${Date.now()}-${file.originalname}` 
         : `${Date.now()}-${file.originalname.replace(/\.[^/.]+$/, "")}`,
-      flags: isPdf ? 'attachment' : undefined // Suggest attachment headers for PDFs
+      flags: isPdf ? 'attachment' : undefined,
+      content_disposition: isPdf ? 'attachment' : undefined // Force download headers
     };
   },
 });
