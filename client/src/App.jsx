@@ -510,11 +510,12 @@ function App() {
                         </a>
                       ) : (
                         <a 
-                          href={msg.fileUrl} 
+                          href={msg.fileUrl ? msg.fileUrl.replace(/^http:/, 'https:') : '#'} 
                           target="_blank" 
                           rel="noopener noreferrer" 
                           className="file-link"
                           title="Open Document"
+                          download={msg.fileName || true}
                         >
                           <div className="file-icon-box">
                             {msg.fileType === 'pdf' ? <File size={24} color="#f43f5e" /> : <Paperclip size={24} />}

@@ -39,10 +39,10 @@ const storage = new CloudinaryStorage({
     
     return {
       folder: 'nexus_chat_uploads',
-      format: isPdf ? 'pdf' : undefined, // Explicitly set pdf format if needed
-      resource_type: 'auto',
-      type: 'upload', // Crucial for public access
-      access_mode: 'public', // Ensures the file isn't private
+      format: isPdf ? 'pdf' : undefined,
+      resource_type: isPdf ? 'raw' : 'auto', // Force 'raw' for PDFs to avoid security blocks
+      type: 'upload', 
+      access_mode: 'public', 
       public_id: `${Date.now()}-${file.originalname.replace(/\.[^/.]+$/, "")}`
     };
   },
