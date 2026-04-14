@@ -208,9 +208,12 @@ io.on('connection', (socket) => {
     try {
       // Fetch history for the room
       const history = await Message.find({ roomId }).sort({ timestamp: 1 }).limit(50);
+      console.log(`📜 Sent ${history.length} messages to ${socket.id}`);
       socket.emit('room_history', history);
     } catch (err) {
       console.error('❌ Error fetching history:', err);
+      // Even on error, send an empty array so skeleton loaders disappear
+      socket.emit('room_history', []);
     }
   });
 
