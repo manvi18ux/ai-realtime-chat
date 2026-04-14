@@ -207,6 +207,7 @@ function App() {
       if (!response.ok) throw new Error("API Error");
       
       const data = await response.json();
+      console.log("🤖 [AI] Summarization Response:", data);
       if (data.summary) {
         setSummary(data.summary);
         setShowModal(true);

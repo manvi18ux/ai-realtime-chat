@@ -12,7 +12,8 @@ const Message = require('./models/Message');
 
 // Gemini Setup
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
+// Use gemini-1.5-flash for standard free-tier accounts
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // Cloudinary Setup
 const cloudinaryConfig = {
@@ -209,9 +210,14 @@ app.post('/api/summarize', async (req, res) => {
 
     const chatHistory = messages
       .reverse()
-      .map(msg => `${msg.sender}: ${msg.content}`)
+      .map(msg => {
+        const textContent = msg.content || (msg.fileUrl ? `[Sent a ${msg.fileType || 'file'}]` : '');
+        return `${msg.sender}: ${textContent}`;
+      })
+      .filter(line => line.length > 0)
       .join('\n');
 
+    console.log(`🔍 Summarizing room: ${roomId} (${messages.length} messages)`);
     const prompt = `Below is a chat history from a room. Provide a concise bulleted summary of the recent discussion:\n\n${chatHistory}`;
 
     const summary = await generateWithRetry(prompt);
