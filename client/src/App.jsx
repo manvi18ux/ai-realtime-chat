@@ -266,8 +266,11 @@ function App() {
     }
   };
 
+  console.log("[UI] isLoggedIn:", isLoggedIn, "isConnected:", isConnected);
+
   const handleJoin = (e) => {
     e.preventDefault();
+    console.log("[UI] Attempting to join with:", username, room);
     if (username && room) {
       setIsLoggedIn(true);
     }
@@ -275,49 +278,53 @@ function App() {
 
   if (!isLoggedIn) {
     return (
-      <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center' }}>
-        <div className="glass-card" style={{ padding: '40px', borderRadius: '24px', width: '400px', background: 'var(--glass)', border: '1px solid var(--glass-border)', backdropFilter: 'blur(20px)' }}>
-          <h1 style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div className="app-container" style={{ 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        display: 'flex', 
+        minHeight: '100vh', 
+        width: '100vw',
+        background: '#0f172a',
+        color: 'white'
+      }}>
+        <div className="glass-card" style={{ padding: '40px', borderRadius: '24px', width: '400px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(20px)' }}>
+          <h1 style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.8rem' }}>
             <MessageSquare color="#6366f1" size={32} /> Join Chat
           </h1>
           <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Username</label>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#94a3b8' }}>Username</label>
               <input 
                 type="text" 
                 placeholder="Enter your name..."
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                style={{ width: '100%' }}
+                style={{ width: '100%', padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                 required
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Room ID</label>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#94a3b8' }}>Room ID</label>
               <input 
                 type="text" 
                 placeholder="e.g. Room 101"
                 value={room}
                 onChange={(e) => setRoom(e.target.value)}
-                style={{ width: '100%' }}
+                style={{ width: '100%', padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                 required
               />
             </div>
-            <button className="send-btn" type="submit" style={{ width: '100%', height: '50px', borderRadius: '12px', fontSize: '1rem', fontWeight: 'bold' }}>
+            <button className="send-btn" type="submit" style={{ width: '100%', height: '50px', borderRadius: '12px', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', background: '#6366f1', color: 'white', border: 'none' }}>
               Join Chat <LogIn size={20} style={{ marginLeft: '8px' }} />
             </button>
           </form>
         </div>
-        <style>{`
-          .glass-card { display: flex; flex-direction: column; }
-          form > div { width: 100%; }
-        `}</style>
       </div>
     );
   }
 
   return (
-    <div className="app-container">
+    <div className="app-container" style={{ display: 'flex', height: '100vh', width: '100vw', background: '#0f172a' }}>
       {isSidebarOpen && <div className="overlay" onClick={() => setIsSidebarOpen(false)}></div>}
 
       <AnimatePresence mode="wait">
