@@ -69,6 +69,9 @@ const ALLOWED_ORIGINS = [
 
 const io = new Server(server, {
   cors: {
+    origin: (origin, callback) => {
+      // Allow if origin is in the list or is any Vercel subdomain
+      if (!origin || ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.vercel.app')) {
         callback(null, true);
       } else {
         console.warn(`[CORS] Rejected origin: ${origin}`);
