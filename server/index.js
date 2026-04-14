@@ -21,11 +21,11 @@ const cloudinaryConfig = {
   api_secret: process.env.CLOUDINARY_API_SECRET,
 };
 
-// Log status on startup (hiding sensitive bits)
-if (!cloudinaryConfig.cloud_name || !cloudinaryConfig.api_key) {
-  console.warn("⚠️ [Cloudinary] Warning: Missing Cloudinary credentials. Uploads will fail.");
+// Log status on startup (showing only first 3 chars for safety)
+if (!cloudinaryConfig.cloud_name || !cloudinaryConfig.api_key || !cloudinaryConfig.api_secret) {
+  console.warn("⚠️ [Cloudinary] Warning: Missing credentials. Uploads will fail.");
 } else {
-  console.log("✅ [Cloudinary] Credentials loaded");
+  console.log(`✅ [Cloudinary] Credentials loaded | Name: ${cloudinaryConfig.cloud_name.substring(0, 3)}... | Key: ${cloudinaryConfig.api_key.substring(0, 3)}... | Secret: ${cloudinaryConfig.api_secret.substring(0, 3)}...`);
 }
 
 cloudinary.config(cloudinaryConfig);
@@ -147,7 +147,7 @@ const MONGO_URI = process.env.MONGO_URI;
 if (!MONGO_URI) {
   console.error('❌ [Database] CRITICAL: MONGO_URI is not defined in environment variables!');
 } else {
-  console.log('⏳ [Database] Attempting to connect to MongoDB...');
+  console.log(`⏳ [Database] Attempting to connect with URI prefix: ${MONGO_URI.substring(0, 15)}...`);
   mongoose
     .connect(MONGO_URI, {
       serverSelectionTimeoutMS: 5000, // Fail fast if can't connect (5 seconds)
