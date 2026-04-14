@@ -39,24 +39,39 @@ const app = express();
 const server = http.createServer(app);
 const ALLOWED_ORIGINS = [
   'https://ai-realtime-chat-manvi-sinhas-projects.vercel.app',
+  'https://ai-realtime-chat-git-main-manvi-sinhas-projects.vercel.app',
   'http://localhost:5173',
   'http://localhost:3000'
 ];
 
 const io = new Server(server, {
   cors: {
-    origin: ALLOWED_ORIGINS,
+    origin: (origin, callback) => {
+      // Allow if origin is in the list or is a Vercel project subdomain
+      if (!origin || ALLOWED_ORIGINS.includes(origin) || origin.includes('manvi-sinhas-projects.vercel.app')) {
+        callback(null, true);
+      } else {
+        console.warn(`[CORS] Rejected origin: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: ['GET', 'POST'],
     credentials: true
   },
-  transports: ['polling', 'websocket'], // Polling first for better stability on Render/Vercel
-  allowEIO3: true // Compatibility for older clients if any
+  transports: ['polling', 'websocket'],
+  allowEIO3: true
 });
 
 app.use(cors({
-  origin: ALLOWED_ORIGINS,
+  origin: (origin, callback) => {
+    if (!origin || ALLOWED_ORIGINS.includes(origin) || origin.includes('manvi-sinhas-projects.vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
-})); // Explicit CORS for Express routes
+}));
 app.use(express.json());
 
 // Health Check
