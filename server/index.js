@@ -144,6 +144,9 @@ async function generateWithRetry(prompt, retries = 3) {
 // MongoDB Connection
 const MONGO_URI = process.env.MONGO_URI;
 
+// Global Mongoose Configuration
+mongoose.set('bufferCommands', false); // Disable buffering globally
+
 // Heartbeat Logger (Helps identify current deployment)
 setInterval(() => {
   console.log(`[HEARTBEAT] V3_ACTIVE | Time: ${new Date().toLocaleTimeString()}`);

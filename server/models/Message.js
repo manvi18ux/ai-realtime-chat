@@ -25,6 +25,8 @@ const MessageSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+}, { 
+  bufferCommands: false // Disable buffering for this schema
 });
 
 module.exports = mongoose.model('Message', MessageSchema);
