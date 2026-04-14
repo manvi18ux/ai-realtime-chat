@@ -161,9 +161,15 @@ if (!MONGO_URI) {
     })
     .then(() => console.log('✅ [Database] Successfully connected to MongoDB'))
     .catch((err) => {
-      console.error('❌ [Database] Connection error:', err.message);
-      if (err.message.includes('whitelist')) {
-        console.error('👉 Tip: Check your MongoDB Atlas Network Access whitelist (allow 0.0.0.0/0)');
+      console.error('❌ [Database] Connection Failed!');
+      console.error(`   Error Message: ${err.message}`);
+      
+      if (err.message.includes('ETIMEDOUT') || err.message.includes('selection timeout')) {
+        console.error('👉 ACTION REQUIRED: Your IP is likely blocked. Go to MongoDB Atlas > Network Access > Add 0.0.0.0/0');
+      } else if (err.message.includes('auth failed') || err.message.includes('Authentication failed')) {
+        console.error('👉 ACTION REQUIRED: Your Username or Password in MONGO_URI is wrong. Check your Database User in Atlas.');
+      } else {
+        console.error('👉 ACTION REQUIRED: Double-check that your MONGO_URI is copied correctly from Atlas (Node.js Driver string).');
       }
     });
 }
@@ -175,7 +181,7 @@ app.post('/api/summarize', async (req, res) => {
   try {
     const messages = await Message.find({ roomId }).sort({ timestamp: -1 }).limit(50);
     
-    if (messages.length === 0) {
+    if (!messages || messages.length === 0) {
       return res.json({ summary: "No messages to summarize yet." });
     }
 
@@ -190,8 +196,8 @@ app.post('/api/summarize', async (req, res) => {
 
     res.json({ summary });
   } catch (err) {
-    console.error('❌ Summarization error:', err);
-    res.status(500).json({ error: "Failed to generate summary." });
+    console.error('❌ Summarization error (Likely DB offline):', err.message);
+    res.json({ summary: "AI Summarization is currently unavailable (Database Offline)." });
   }
 });
 
@@ -202,7 +208,7 @@ app.post('/api/suggest-replies', async (req, res) => {
   try {
     const messages = await Message.find({ roomId }).sort({ timestamp: -1 }).limit(10);
 
-    if (messages.length === 0) {
+    if (!messages || messages.length === 0) {
       return res.json({ suggestions: [] });
     }
 
@@ -220,7 +226,6 @@ app.post('/api/suggest-replies', async (req, res) => {
     const text = await generateWithRetry(prompt);
 
     // Improved JSON extraction: 
-    // AI often returns ```json [ ... ] ``` or just [ ... ]
     let suggestions = [];
     try {
       const jsonStart = text.indexOf('[');
@@ -235,8 +240,8 @@ app.post('/api/suggest-replies', async (req, res) => {
 
     res.json({ suggestions: Array.isArray(suggestions) ? suggestions.slice(0, 3) : [] });
   } catch (err) {
-    console.error('❌ Suggestion error:', err);
-    res.status(500).json({ error: "Failed to generate suggestions." });
+    console.error('❌ Suggestion error (Likely DB offline):', err.message);
+    res.json({ suggestions: [] });
   }
 });
 
