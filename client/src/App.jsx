@@ -3,15 +3,16 @@ import io from 'socket.io-client';
 import { Send, Hash, MessageSquare, Menu, X, User, LogIn, Sparkles, Paperclip, File, Image as ImageIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+const API_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000').replace(/\/$/, "");
 
 function App() {
   // Reactive Socket Initialization
   const socket = useMemo(() => io(API_URL, {
-    transports: ['polling', 'websocket'], // Start with polling for faster handshake
+    transports: ['polling', 'websocket'],
     withCredentials: true,
     reconnectionAttempts: 15,
-    reconnectionDelay: 2000
+    reconnectionDelay: 2000,
+    autoConnect: true
   }), []);
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -42,31 +43,44 @@ function App() {
   const scrollRef = useRef();
   const rooms = ['General', 'Tech', 'Design', 'Random'];
 
+  // 1. Connection Monitoring (Runs on Mount)
   useEffect(() => {
-    if (!isLoggedIn) return;
-
-    // Connection monitoring
     const onConnect = () => {
+      console.log("✅ [Socket] Connected:", socket.id);
       setIsConnected(true);
       setErrorMsg('');
       setShowReconnected(true);
       setTimeout(() => setShowReconnected(false), 3000);
     };
-    const onDisconnect = () => setIsConnected(false);
+
+    const onDisconnect = (reason) => {
+      console.log("❌ [Socket] Disconnected:", reason);
+      setIsConnected(false);
+    };
+
+    const onConnectError = (err) => {
+      console.error(`🔴 [Socket] Connection Error: ${err.message}`);
+      setErrorMsg(err.message);
+      setIsConnected(false);
+    };
+
+    // Initialize state
+    setIsConnected(socket.connected);
 
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
+    socket.on('connect_error', onConnectError);
 
-    // Detail error logging
-    socket.on('connect_error', (err) => {
-      console.error(`🔴 [Socket] Connection Error: ${err.message}`);
-      setErrorMsg(err.message);
-    });
+    return () => {
+      socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
+      socket.off('connect_error', onConnectError);
+    };
+  }, []); // Only on mount
 
-    socket.on('error', (err) => {
-      console.error('🔴 [Socket] Generic Error:', err);
-      setErrorMsg('Internal Error');
-    });
+  // 2. Room & Message Logic (Runs when logged in or room changes)
+  useEffect(() => {
+    if (!isLoggedIn) return;
 
     // Join room
     setIsLoadingHistory(true);
@@ -81,13 +95,7 @@ function App() {
     // Listen for new messages
     socket.on('receive_message', (data) => {
       setMessageList((list) => [...list, data]);
-      
-      // If message is from someone else, trigger suggestions
-      if (data.sender !== username) {
-        fetchSuggestions();
-      } else {
-        setSuggestions([]); // Clear own suggestions
-      }
+      if (data.sender !== username) fetchSuggestions();
     });
 
     // Listen for typing events
@@ -106,8 +114,6 @@ function App() {
     });
 
     return () => {
-      socket.off('connect', onConnect);
-      socket.off('disconnect', onDisconnect);
       socket.off('room_history');
       socket.off('receive_message');
       socket.off('user_typing');
@@ -120,6 +126,11 @@ function App() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messageList]);
+
+  const handleReconnect = () => {
+    socket.connect();
+    setErrorMsg('Attempting manual reconnect...');
+  };
 
   const sendMessage = async () => {
     if (message !== '') {
@@ -367,6 +378,22 @@ function App() {
             <div style={{ fontSize: '10px', opacity: 0.8, marginTop: '4px' }}>
               Backend: {API_URL}
             </div>
+            <button 
+              onClick={handleReconnect}
+              style={{ 
+                marginTop: '10px', 
+                background: 'rgba(255,255,255,0.15)', 
+                border: 'none', 
+                padding: '4px 12px', 
+                borderRadius: '6px', 
+                color: 'white', 
+                fontSize: '11px', 
+                cursor: 'pointer',
+                fontWeight: '600'
+              }}
+            >
+              Retry Connection ↻
+            </button>
           </div>
         )}
         {showReconnected && (
